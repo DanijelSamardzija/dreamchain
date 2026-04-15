@@ -794,7 +794,7 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
         }, {
             onReadyForServerApproval: (paymentId) => {
                 // Notify backend to approve payment
-                fetch('/api/payments/approve', {
+                fetch('https://dreamchain-hod0.onrender.com/api/payments/approve', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({ paymentId })
@@ -802,7 +802,7 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
             },
             onReadyForServerCompletion: (paymentId, txid) => {
                 // Notify backend to complete payment, then generate dream
-                fetch('/api/payments/complete', {
+                fetch('https://dreamchain-hod0.onrender.com/api/payments/complete', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({ paymentId, txid })
