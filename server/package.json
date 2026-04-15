@@ -1,0 +1,19 @@
+{
+  "name": "dreamchain-server",
+  "version": "1.0.0",
+  "description": "Dream-Chain backend — Pi payment approval & completion",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

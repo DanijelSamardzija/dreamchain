@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dream-Chain AI</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <!-- ── Auth Bar (top-left) ──────────────────────────────── -->
+    <div id="authBar" class="auth-bar">
+        <!-- Injected by JS: login button OR user pill -->
+    </div>
+
+    <div class="language-selector">
+        <img id="currentFlag" class="flag-icon" src="https://flagcdn.com/20x15/rs.png" alt="flag">
+        <select id="langSelect">
+            <option value="sr">Srb (SRB)</option>
+            <option value="en">Eng (ENG)</option>
+            <option value="de">Ger (DEU)</option>
+            <option value="es">Esp (SPA)</option>
+            <option value="it">Ita (ITA)</option>
+            <option value="ru">Rus (RUS)</option>
+            <option value="zh">Chi (ZHO)</option>
+            <option value="fr">Fra (FRA)</option>
+        </select>
+    </div>
+
+    <div class="header">
+        <h1>🌙 Dream-Chain</h1>
+        <p id="subTitle">Pretvori svoje snove u AI umetnost</p>
+    </div>
+
+    <div class="dream-input-container">
+        <textarea id="dreamText" placeholder="Opiši svoj san ovde..."></textarea>
+        <button class="btn-generate" id="genBtn">Vizualizuj san (Pi 0.5)</button>
+    </div>
+
+    <div class="gallery-section">
+        <h2 class="gallery-title" id="galTitle">Nedavni snovi zajednice</h2>
+        <div class="search-bar-wrap">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" class="search-input" placeholder="Pretraži snove..." autocomplete="off" maxlength="120">
+            <button class="search-clear" id="searchClear" aria-label="Obriši pretragu" style="display:none">✕</button>
+        </div>
+        <div class="gallery-controls">
+            <div class="filter-toggle" id="filterToggle">
+                <button class="filter-btn active" id="filterAll">Svi snovi</button>
+                <button class="filter-btn" id="filterMine">Moji snovi</button>
+            </div>
+            <div class="sort-toggle" id="sortToggle">
+                <span class="sort-label" id="sortLabel">Sortiraj:</span>
+                <button class="sort-btn active" id="sortNewest">Najnoviji</button>
+                <button class="sort-btn" id="sortPopular">Najpopularniji</button>
+            </div>
+        </div>
+        <div class="dream-grid" id="dreamGrid"></div>
+    </div>
+
+    <!-- ── Pi Payment Modal ───────────────────────────────────── -->
+    <div id="paymentModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+        <div class="modal-box">
+            <div class="modal-pi-icon">π</div>
+            <h2 class="modal-title" id="modalTitle">Potvrdi generaciju sna</h2>
+            <p class="modal-label" id="modalLabel">Cena vizualizacije</p>
+            <div class="modal-amount">0.5 π</div>
+            <p class="modal-desc" id="modalDesc">Potvrdite plaćanje da biste generisali AI vizualizaciju vašeg sna na Dream-Chain mreži.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-cancel" id="modalCancel">Otkaži</button>
+                <button class="modal-btn modal-confirm" id="modalConfirm">Potvrdi</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Login Required Modal ─────────────────────────────── -->
+    <div id="loginRequiredModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <div class="modal-pi-icon">π</div>
+            <h2 class="modal-title" id="loginReqTitle">Prijavite se</h2>
+            <p class="modal-desc" id="loginReqDesc">Morate biti prijavljeni putem Pi mreže da biste generisali vizualizaciju sna.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-cancel" id="loginReqClose">Zatvori</button>
+                <button class="modal-btn modal-confirm" id="loginReqBtn">Prijavi se</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Dream Detail Modal ────────────────────────────────── -->
+    <div id="dreamModal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="dreamModalTitle">
+        <div class="modal-box dream-modal-box">
+            <button class="dream-modal-close" id="dreamModalClose" aria-label="Close">✕</button>
+            <div class="dream-modal-preview" id="dreamModalPreview"></div>
+            <div class="dream-modal-body">
+                <p class="dream-modal-meta" id="dreamModalMeta">Dream</p>
+                <h2 class="dream-modal-title" id="dreamModalTitle"></h2>
+                <p class="dream-modal-text" id="dreamModalText"></p>
+                <p class="dream-modal-author" id="dreamModalAuthor"></p>
+                <button class="modal-like-btn" id="dreamModalLikeBtn" aria-label="Like">
+                    <span class="modal-like-heart">♡</span>
+                    <span class="modal-like-count" id="dreamModalLikeCount">0</span>
+                </button>
+                <div class="dream-modal-actions">
+                    <button class="btn-edit-dream"   id="dreamEditBtn">Izmeni san</button>
+                    <button class="btn-delete-dream" id="dreamDeleteBtn">Obriši san</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Edit Dream Modal ──────────────────────────────────── -->
+    <div id="editModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-box edit-modal-box">
+            <div class="modal-pi-icon">✎</div>
+            <h2 class="modal-title" id="editModalTitle">Izmeni san</h2>
+            <textarea id="editDreamText" class="edit-textarea" rows="4" maxlength="500"></textarea>
+            <p class="edit-char-count"><span id="editCharCount">0</span> / 500</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-cancel"  id="editModalCancel">Otkaži</button>
+                <button class="modal-btn modal-confirm" id="editModalSave">Sačuvaj izmene</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── Delete Confirm Modal ──────────────────────────────── -->
+    <div id="deleteModal" class="modal-overlay" role="dialog" aria-modal="true">
+        <div class="modal-box">
+            <div class="modal-pi-icon" style="color:#f64650;">✕</div>
+            <h2 class="modal-title" id="deleteModalTitle">Obriši san</h2>
+            <p class="modal-desc" id="deleteModalDesc">Da li ste sigurni da želite da obrišete ovaj san? Ova akcija se ne može poništiti.</p>
+            <div class="modal-actions">
+                <button class="modal-btn modal-cancel" id="deleteModalCancel">Otkaži</button>
+                <button class="modal-btn modal-delete-confirm" id="deleteModalConfirm">Obriši</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pi Network SDK -->
+    <script src="https://sdk.minepi.com/pi-sdk.js"></script>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Supabase config -->
+    <script src="js/supabase-config.js"></script>
+
+    <!-- AI Image Generation Service -->
+    <script src="js/ai-service.js"></script>
+
+    <!-- App logic -->
+    <script src="js/app.js"></script>
+</body>
+</html>
