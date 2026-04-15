@@ -3,7 +3,7 @@
 // ============================================================
 
 // ── Pi SDK Init ───────────────────────────────────────────────
-Pi.init({ version: "2.0", sandbox: false });
+Pi.init({ version: "2.0", sandbox: true });
 
 // ── Constants ────────────────────────────────────────────────
 const STORAGE_KEY  = 'dreamchain_dreams';
