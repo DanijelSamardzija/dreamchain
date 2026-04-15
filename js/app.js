@@ -793,22 +793,26 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
             metadata: { dream: pendingDreamText }
         }, {
             onReadyForServerApproval: (paymentId) => {
-                // Notify backend to approve payment
+                console.log('[Pi] onReadyForServerApproval:', paymentId);
                 fetch('https://dreamchain-hod0.onrender.com/api/payments/approve', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({ paymentId })
-                }).catch(err => console.error('[Pi] approval error:', err));
+                })
+                .then(r => r.json())
+                .then(d => console.log('[Pi] approve response:', JSON.stringify(d)))
+                .catch(err => console.error('[Pi] approval FETCH ERROR:', err.message));
             },
             onReadyForServerCompletion: (paymentId, txid) => {
-                // Notify backend to complete payment, then generate dream
+                console.log('[Pi] onReadyForServerCompletion:', paymentId, txid);
                 fetch('https://dreamchain-hod0.onrender.com/api/payments/complete', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({ paymentId, txid })
                 })
-                .then(() => processDream(pendingDreamText))
-                .catch(err => { console.error('[Pi] completion error:', err); resetButton(); });
+                .then(r => r.json())
+                .then(d => { console.log('[Pi] complete response:', JSON.stringify(d)); processDream(pendingDreamText); })
+                .catch(err => { console.error('[Pi] completion FETCH ERROR:', err.message); resetButton(); });
             },
             onCancel: (paymentId) => {
                 console.log('[Pi] Payment cancelled:', paymentId);
