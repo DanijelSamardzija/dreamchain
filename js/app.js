@@ -2,6 +2,9 @@
 //  Dream-Chain AI — Main Application Logic
 // ============================================================
 
+// ── Pi SDK Init ───────────────────────────────────────────────
+Pi.init({ version: "2.0", sandbox: true });
+
 // ── Constants ────────────────────────────────────────────────
 const STORAGE_KEY  = 'dreamchain_dreams';
 const USER_KEY     = 'dreamchain_user';
