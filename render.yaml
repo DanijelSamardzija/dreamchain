@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: dreamchain-server
+    env: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: PI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: https://dreamchain-nu.vercel.app
+      - key: PORT
+        value: 3000
