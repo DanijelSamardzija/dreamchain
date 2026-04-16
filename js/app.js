@@ -203,8 +203,15 @@ function createCardEl(dream, extraClass = '') {
         ? `<div class="card-author">${dream.authorName}</div>`
         : '';
 
+    const imgStyle = dream.imageUrl
+        ? `background: ${dream.gradient}; position:relative; overflow:hidden;`
+        : `background: ${dream.gradient}`;
+    const imgTag = dream.imageUrl
+        ? `<img src="${dream.imageUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" />`
+        : '';
+
     card.innerHTML = `
-        <div class="dream-img" style="background: ${dream.gradient}">${dream.label}</div>
+        <div class="dream-img" style="${imgStyle}">${imgTag}${dream.label}</div>
         <div class="dream-info">${dream.quote}</div>
         ${authorBadge}
         <div class="card-footer">
@@ -909,19 +916,12 @@ async function processDream(text) {
         if (data.imageUrl) {
             newDream.imageUrl = data.imageUrl;
             // Update card in DOM
-            const card = document.querySelector(`[data-id="${newDream.id}"]`);
-            if (card) {
-                const imgEl = card.querySelector('.dream-img');
-                if (imgEl) {
-                    imgEl.style.padding = '0';
-                    imgEl.style.overflow = 'hidden';
-                    imgEl.style.position = 'relative';
-                    const img = document.createElement('img');
-                    img.src = data.imageUrl;
-                    img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;';
-                    imgEl.appendChild(img);
-                }
-            }
+            // Update localStorage with imageUrl
+            const dreams = loadDreams() || [];
+            const idx = dreams.findIndex(d => String(d.id) === String(newDream.id));
+            if (idx !== -1) { dreams[idx].imageUrl = data.imageUrl; saveDreams(dreams); }
+            // Re-render gallery so createCardEl uses the imageUrl
+            renderFilteredGallery();
             // Update localStorage
             const dreams = loadDreams() || [];
             const idx = dreams.findIndex(d => d.id === newDream.id);
