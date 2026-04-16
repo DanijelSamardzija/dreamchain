@@ -101,6 +101,11 @@ app.post('/api/generate-image', async (req, res) => {
         });
 
         let prediction = await startRes.json();
+        console.log('[Replicate] API response:', JSON.stringify(prediction).substring(0, 300));
+        if (!prediction.id) {
+            console.error('[Replicate] No prediction ID — full response:', JSON.stringify(prediction));
+            return res.status(500).json({ error: prediction.detail || prediction.error || 'No prediction ID' });
+        }
         console.log('[Replicate] Started prediction:', prediction.id);
 
         // Poll until done (max 60s)
