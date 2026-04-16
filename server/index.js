@@ -14,6 +14,10 @@ const PORT = process.env.PORT || 3000;
 // ── Middleware ────────────────────────────────────────────────
 app.use(express.json());
 app.use(cors());
+app.use((req, res, next) => {
+    console.log(`[REQ] ${req.method} ${req.path} origin=${req.headers.origin || 'none'}`);
+    next();
+});
 
 // ── Pi API helpers ────────────────────────────────────────────
 const PI_API_BASE = 'https://api.minepi.com/v2';
