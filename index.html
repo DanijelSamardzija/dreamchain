@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dream-Chain AI</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌙</text></svg>">
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4834d4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Dream-Chain">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -34,7 +39,16 @@
     </div>
 
     <div class="dream-input-container">
-        <textarea id="dreamText" placeholder="Opiši svoj san ovde..."></textarea>
+        <textarea id="dreamText" placeholder="Opiši svoj san ovde..." maxlength="500"></textarea>
+        <div class="style-selector" id="styleSelector">
+            <button class="style-btn active" data-style="dreamlike">🌌 Dreamlike</button>
+            <button class="style-btn" data-style="anime">🎌 Anime</button>
+            <button class="style-btn" data-style="realistic">📸 Realistic</button>
+            <button class="style-btn" data-style="fantasy">🏰 Fantasy</button>
+            <button class="style-btn" data-style="cyberpunk">🤖 Cyberpunk</button>
+            <button class="style-btn" data-style="watercolor">🎨 Watercolor</button>
+        </div>
+        <p class="input-char-count"><span id="dreamCharCount">0</span> / 500</p>
         <button class="btn-generate" id="genBtn">Vizualizuj san (Pi 0.5)</button>
     </div>
 
@@ -102,6 +116,7 @@
                     <span class="modal-like-count" id="dreamModalLikeCount">0</span>
                 </button>
                 <div class="dream-modal-actions">
+                    <button class="btn-share-dream"  id="dreamShareBtn">↗ Podeli</button>
                     <button class="btn-edit-dream"   id="dreamEditBtn">Izmeni san</button>
                     <button class="btn-delete-dream" id="dreamDeleteBtn">Obriši san</button>
                 </div>

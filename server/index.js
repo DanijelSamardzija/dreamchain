@@ -79,11 +79,21 @@ app.post('/api/payments/complete', async (req, res) => {
 
 // ── POST /api/generate-image ──────────────────────────────────
 app.post('/api/generate-image', async (req, res) => {
-    const { prompt } = req.body;
+    const { prompt, style } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
 
+    const stylePrompts = {
+        dreamlike:  'surreal dreamlike art, soft glowing ethereal colors',
+        anime:      'anime style illustration, vibrant manga art, highly detailed',
+        realistic:  'photorealistic hyperdetailed cinematic photography, 8k resolution',
+        fantasy:    'epic fantasy digital painting, magical atmosphere, dramatic lighting',
+        cyberpunk:  'cyberpunk neon city art, dark futuristic dystopia, glowing lights',
+        watercolor: 'delicate watercolor painting, soft brushstrokes, artistic illustration'
+    };
+    const stylePrefix = stylePrompts[style] || stylePrompts.dreamlike;
+
     try {
-        const encoded  = encodeURIComponent(`surreal dreamlike art: ${prompt}`);
+        const encoded  = encodeURIComponent(`${stylePrefix}: ${prompt}`);
         const seed     = Math.floor(Math.random() * 1000000);
         const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`;
 

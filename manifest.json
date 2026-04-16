@@ -1,0 +1,25 @@
+{
+  "name": "Dream-Chain AI",
+  "short_name": "DreamChain",
+  "description": "Turn your dreams into AI art on the Pi Network",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0d1a",
+  "theme_color": "#4834d4",
+  "orientation": "portrait-primary",
+  "lang": "sr",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

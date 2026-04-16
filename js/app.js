@@ -55,9 +55,10 @@ const defaultDreams = [
 let currentLang      = 'sr';
 let pendingDreamText = '';
 let currentUser      = null;     // { uid, username } | null
-let activeFilter     = 'all';   // 'all' | 'mine'
-let activeSort       = 'newest'; // 'newest' | 'popular'
-let activeSearch     = '';       // current search query
+let activeFilter     = 'all';       // 'all' | 'mine'
+let activeSort       = 'newest';    // 'newest' | 'popular'
+let activeSearch     = '';          // current search query
+let activeStyle      = 'dreamlike'; // AI image style
 
 // ── localStorage — dreams ────────────────────────────────────
 function loadDreams() {
@@ -289,6 +290,24 @@ searchClear.addEventListener('click', () => {
     applySearch('');
 });
 
+// ── Dream textarea character counter ──────────────────────────
+const dreamTextEl      = document.getElementById('dreamText');
+const dreamCharCountEl = document.getElementById('dreamCharCount');
+if (dreamTextEl && dreamCharCountEl) {
+    dreamTextEl.addEventListener('input', () => {
+        dreamCharCountEl.textContent = dreamTextEl.value.length;
+    });
+}
+
+// ── AI Style selector ─────────────────────────────────────────
+document.querySelectorAll('.style-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeStyle = btn.dataset.style;
+    });
+});
+
 // ── Sort button state ─────────────────────────────────────────
 function updateSortButtons() {
     document.getElementById('sortNewest').classList.toggle('active', activeSort === 'newest');
@@ -388,7 +407,9 @@ const translations = {
         notifGenerating:    "San dodan! Generišem AI sliku...",
         notifImageDone:     "AI slika je gotova! ✦",
         notifImageFail:     "AI slika nije uspjela — san je sačuvan.",
-        notifPayFail:       "Plaćanje nije uspjelo. Pokušaj ponovo."
+        notifPayFail:       "Plaćanje nije uspjelo. Pokušaj ponovo.",
+        shareBtn:           "↗ Podeli",
+        shareCopied:        "Link kopiran! 🔗"
     },
     en: {
         sub:           "Turn your dreams into AI art",
@@ -438,7 +459,9 @@ const translations = {
         notifGenerating:    "Dream added! Generating AI image...",
         notifImageDone:     "AI image is ready! ✦",
         notifImageFail:     "AI image failed — dream saved with gradient.",
-        notifPayFail:       "Payment failed. Please try again."
+        notifPayFail:       "Payment failed. Please try again.",
+        shareBtn:           "↗ Share",
+        shareCopied:        "Link copied! 🔗"
     },
     de: {
         sub:           "Verwandle deine Träume in AI-Kunst",
@@ -488,7 +511,9 @@ const translations = {
         notifGenerating:    "Traum hinzugefügt! KI-Bild wird generiert...",
         notifImageDone:     "KI-Bild ist fertig! ✦",
         notifImageFail:     "KI-Bild fehlgeschlagen — Traum mit Gradient gespeichert.",
-        notifPayFail:       "Zahlung fehlgeschlagen. Bitte erneut versuchen."
+        notifPayFail:       "Zahlung fehlgeschlagen. Bitte erneut versuchen.",
+        shareBtn:           "↗ Teilen",
+        shareCopied:        "Link kopiert! 🔗"
     },
     es: {
         sub:           "Convierte tus sueños en arte IA",
@@ -538,7 +563,9 @@ const translations = {
         notifGenerating:    "¡Sueño añadido! Generando imagen IA...",
         notifImageDone:     "¡Imagen IA lista! ✦",
         notifImageFail:     "Imagen IA fallida — sueño guardado con gradiente.",
-        notifPayFail:       "Pago fallido. Inténtalo de nuevo."
+        notifPayFail:       "Pago fallido. Inténtalo de nuevo.",
+        shareBtn:           "↗ Compartir",
+        shareCopied:        "¡Enlace copiado! 🔗"
     },
     it: {
         sub:           "Trasforma i tuoi sogni in arte AI",
@@ -588,7 +615,9 @@ const translations = {
         notifGenerating:    "Sogno aggiunto! Generazione immagine IA...",
         notifImageDone:     "Immagine IA pronta! ✦",
         notifImageFail:     "Immagine IA fallita — sogno salvato con gradiente.",
-        notifPayFail:       "Pagamento fallito. Riprova."
+        notifPayFail:       "Pagamento fallito. Riprova.",
+        shareBtn:           "↗ Condividi",
+        shareCopied:        "Link copiato! 🔗"
     },
     ru: {
         sub:           "Превратите свои мечты в ИИ-искусство",
@@ -638,7 +667,9 @@ const translations = {
         notifGenerating:    "Сон добавлен! Генерирую изображение ИИ...",
         notifImageDone:     "Изображение ИИ готово! ✦",
         notifImageFail:     "Ошибка генерации — сон сохранён с градиентом.",
-        notifPayFail:       "Платёж не удался. Попробуйте снова."
+        notifPayFail:       "Платёж не удался. Попробуйте снова.",
+        shareBtn:           "↗ Поделиться",
+        shareCopied:        "Ссылка скопирована! 🔗"
     },
     zh: {
         sub:           "将你的梦想转化为人工智能艺术",
@@ -688,7 +719,9 @@ const translations = {
         notifGenerating:    "梦境已添加！正在生成AI图像...",
         notifImageDone:     "AI图像已就绪！✦",
         notifImageFail:     "AI图像生成失败 — 梦境已用渐变色保存。",
-        notifPayFail:       "支付失败，请重试。"
+        notifPayFail:       "支付失败，请重试。",
+        shareBtn:           "↗ 分享",
+        shareCopied:        "链接已复制！🔗"
     },
     fr: {
         sub:           "Transformez vos rêves en art IA",
@@ -738,7 +771,9 @@ const translations = {
         notifGenerating:    "Rêve ajouté ! Génération de l'image IA...",
         notifImageDone:     "Image IA prête ! ✦",
         notifImageFail:     "Échec de l'image IA — rêve sauvegardé avec dégradé.",
-        notifPayFail:       "Paiement échoué. Veuillez réessayer."
+        notifPayFail:       "Paiement échoué. Veuillez réessayer.",
+        shareBtn:           "↗ Partager",
+        shareCopied:        "Lien copié ! 🔗"
     }
 };
 
@@ -795,6 +830,7 @@ function applyLanguage(lang) {
     // Buttons inside dream detail modal
     document.getElementById('dreamDeleteBtn').innerText = data.deleteBtn;
     document.getElementById('dreamEditBtn').innerText   = data.editBtn;
+    document.getElementById('dreamShareBtn').innerText  = data.shareBtn || '↗ Share';
 
     // Re-render auth bar so button labels update in place
     renderAuthUI();
@@ -855,7 +891,7 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({ paymentId, txid })
                 })
-                .then(() => processDream(pendingDreamText))
+                .then(() => processDream(pendingDreamText, activeStyle))
                 .catch(err => { console.error('[Pi] completion error:', err.message); resetButton(); });
             },
             onCancel: () => { resetButton(); },
@@ -901,7 +937,7 @@ function simulateProcessing(text) {
     }, 1500);
 }
 
-async function processDream(text) {
+async function processDream(text, style = 'dreamlike') {
     const textarea = document.getElementById('dreamText');
     const label    = text.length > 22 ? text.substring(0, 22).trimEnd() + '…' : text;
     const fallback = gradientPalette[Math.floor(Math.random() * gradientPalette.length)];
@@ -927,6 +963,8 @@ async function processDream(text) {
 
     textarea.value   = '';
     pendingDreamText = '';
+    const charEl = document.getElementById('dreamCharCount');
+    if (charEl) charEl.textContent = '0';
     resetButton();
     const t2 = translations[currentLang] || translations['sr'];
     showNotification(t2.notifGenerating || 'Generišem AI sliku...', 'info');
@@ -936,7 +974,7 @@ async function processDream(text) {
         const res = await fetch('https://dreamchain-hod0.onrender.com/api/generate-image', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ prompt: text })
+            body:    JSON.stringify({ prompt: text, style })
         });
         if (!res.ok) throw new Error('Server error ' + res.status);
 
@@ -1008,8 +1046,18 @@ function openDreamModal(label, quote, gradient, authorName, dreamId) {
 
     document.getElementById('dreamModalTitle').innerText          = label;
     document.getElementById('dreamModalText').innerText           = displayText;
-    document.getElementById('dreamModalPreview').style.background = gradient;
     document.getElementById('dreamModalMeta').innerText           = t.dreamMeta;
+
+    // Show AI image in preview if available, otherwise gradient
+    const previewEl = document.getElementById('dreamModalPreview');
+    previewEl.style.background = gradient;
+    const allForPreview = loadDreams() || defaultDreams;
+    const dreamForPreview = dreamId ? allForPreview.find(d => String(d.id) === String(dreamId)) : null;
+    if (dreamForPreview && dreamForPreview.imageUrl) {
+        previewEl.innerHTML = `<img src="${dreamForPreview.imageUrl}" style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;" />`;
+    } else {
+        previewEl.innerHTML = '';
+    }
 
     const authorEl = document.getElementById('dreamModalAuthor');
     if (authorName) {
@@ -1059,6 +1107,43 @@ dreamModalClose.addEventListener('click', closeDreamModal);
 dreamModal.addEventListener('click', (e) => {
     if (e.target === dreamModal) closeDreamModal();
 });
+
+// Share button — copy URL with dream ID to clipboard
+document.getElementById('dreamShareBtn').addEventListener('click', () => {
+    if (!activeDreamId) return;
+    const t   = translations[currentLang] || translations['sr'];
+    const url = `${window.location.origin}${window.location.pathname}?dream=${activeDreamId}`;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            showNotification(t.shareCopied || 'Link kopiran! 🔗', 'success');
+        }).catch(() => fallbackCopy(url, t));
+    } else {
+        fallbackCopy(url, t);
+    }
+});
+
+function fallbackCopy(url, t) {
+    const el = document.createElement('textarea');
+    el.value = url;
+    el.style.cssText = 'position:fixed;opacity:0;pointer-events:none;';
+    document.body.appendChild(el);
+    el.select();
+    try { document.execCommand('copy'); } catch {}
+    document.body.removeChild(el);
+    showNotification((t && t.shareCopied) || 'Link kopiran! 🔗', 'success');
+}
+
+// Open a specific dream from URL parameter ?dream=ID
+function openDreamFromUrl() {
+    const params = new URLSearchParams(window.location.search);
+    const id     = params.get('dream');
+    if (!id) return;
+    const all   = loadDreams() || defaultDreams;
+    const dream = all.find(d => String(d.id) === String(id));
+    if (dream) {
+        openDreamModal(dream.label, dream.quote, dream.gradient, dream.authorName || null, dream.id);
+    }
+}
 
 // Edit button in detail modal → open edit modal
 document.getElementById('dreamEditBtn').addEventListener('click', () => {
@@ -1317,6 +1402,7 @@ applyLanguage('sr'); // sets all text + renderAuthUI()
 updateFilterButtons();
 updateSortButtons();
 renderFilteredGallery();
+openDreamFromUrl(); // open dream from ?dream=ID if present in URL
 
 // ── Wake up Render backend on page load ──────────────────────
 fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
@@ -1334,6 +1420,7 @@ fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
         if (data && data.length > 0) {
             saveDreams(data);
             renderFilteredGallery();
+            openDreamFromUrl(); // re-check after Supabase data is loaded
         }
     } catch (e) {
         console.warn('[Supabase] sync failed:', e);

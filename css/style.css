@@ -887,7 +887,6 @@ textarea::placeholder {
 
 /* ── Delete Dream Button (inside detail modal) ── */
 .btn-delete-dream {
-    margin-top: 20px;
     width: 100%;
     padding: 12px;
     border-radius: 40px;
@@ -1010,3 +1009,91 @@ textarea.shake {
 }
 
 @keyframes fadeInUp { from { opacity:0; transform:translateX(-50%) translateY(16px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
+/* ── Style Selector ──────────────────────────── */
+.style-selector {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 7px;
+    margin: 14px 0 4px;
+    justify-content: center;
+}
+
+.style-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.45);
+    border-radius: 20px;
+    padding: 5px 13px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.style-btn:hover {
+    background: rgba(104, 109, 224, 0.18);
+    border-color: rgba(162, 155, 254, 0.4);
+    color: #c8b0ff;
+}
+
+.style-btn.active {
+    background: rgba(104, 109, 224, 0.22);
+    border-color: rgba(162, 155, 254, 0.55);
+    color: #a29bfe;
+    box-shadow: 0 0 12px rgba(104, 109, 224, 0.2);
+}
+
+/* ── Input character counter ─────────────────── */
+.input-char-count {
+    text-align: right;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.25);
+    margin: 4px 2px 0;
+}
+
+/* ── Share Dream Button ───────────────────────── */
+.btn-share-dream {
+    width: 100%;
+    padding: 12px;
+    border-radius: 40px;
+    border: 1px solid rgba(162, 155, 254, 0.25);
+    background: rgba(162, 155, 254, 0.06);
+    color: rgba(162, 155, 254, 0.75);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.4px;
+    transition: background 0.2s, color 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+
+.btn-share-dream:hover {
+    background: rgba(162, 155, 254, 0.15);
+    color: #a29bfe;
+    border-color: rgba(162, 155, 254, 0.5);
+    box-shadow: 0 0 18px rgba(162, 155, 254, 0.2);
+}
+
+/* ── Responsive (Mobile) ─────────────────────── */
+@media (max-width: 600px) {
+    .dream-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .header h1 { font-size: 30px; letter-spacing: 1px; }
+    .header p  { font-size: 15px; }
+    .dream-input-container { padding: 24px 18px; width: 95%; }
+    .gallery-section { width: 97%; }
+    .gallery-controls { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .sort-toggle { flex-wrap: wrap; }
+    .auth-bar { top: 12px; left: 12px; }
+    .language-selector { top: 12px; right: 12px; padding: 4px 10px; }
+    .modal-box { padding: 32px 24px 28px; }
+    .dream-modal-body { padding: 18px 22px 26px; }
+}
+
+@media (max-width: 380px) {
+    .dream-grid { grid-template-columns: 1fr; }
+    .style-selector { gap: 5px; }
+    .style-btn { padding: 4px 10px; font-size: 0.73rem; }
+}
