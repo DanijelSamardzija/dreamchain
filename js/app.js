@@ -913,12 +913,13 @@ async function processDream(text) {
             if (card) {
                 const imgEl = card.querySelector('.dream-img');
                 if (imgEl) {
-                    const img = new Image();
-                    img.onload = () => {
-                        imgEl.style.background = `url('${data.imageUrl}') center/cover no-repeat`;
-                        imgEl.style.color = 'white';
-                    };
+                    imgEl.style.padding = '0';
+                    imgEl.style.overflow = 'hidden';
+                    imgEl.style.position = 'relative';
+                    const img = document.createElement('img');
                     img.src = data.imageUrl;
+                    img.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;border-radius:inherit;';
+                    imgEl.appendChild(img);
                 }
             }
             // Update localStorage
