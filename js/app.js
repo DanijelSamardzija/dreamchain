@@ -157,8 +157,13 @@ function handleLogin() {
 
 // ── Handle incomplete payment on login ───────────────────────
 function onIncompletePaymentFound(payment) {
-    console.warn('[Pi] Incomplete payment found:', payment);
-    // Server should handle this — for now just log it
+    console.warn('[Pi] Incomplete payment found:', payment.identifier);
+    // Complete the dangling payment so the user can make new ones
+    fetch('https://dreamchain-hod0.onrender.com/api/payments/complete', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ paymentId: payment.identifier, txid: payment.transaction && payment.transaction.txid })
+    }).catch(err => console.warn('[Pi] Could not complete incomplete payment:', err.message));
 }
 
 // ── Auth — logout ─────────────────────────────────────────────
