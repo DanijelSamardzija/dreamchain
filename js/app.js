@@ -787,12 +787,15 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
         btn.classList.add('loading');
         btn.textContent = '✦ ✦ ✦';
 
+        fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
+
         Pi.createPayment({
             amount:   0.5,
             memo:     'Dream-Chain AI visualization',
             metadata: { dream: pendingDreamText }
         }, {
             onReadyForServerApproval: (paymentId) => {
+                fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
                 console.log('[Pi] onReadyForServerApproval:', paymentId);
                 fetch('https://dreamchain-hod0.onrender.com/api/payments/approve', {
                     method:  'POST',
@@ -804,6 +807,7 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
                 .catch(err => console.error('[Pi] approval FETCH ERROR:', err.message));
             },
             onReadyForServerCompletion: (paymentId, txid) => {
+                fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
                 console.log('[Pi] onReadyForServerCompletion:', paymentId, txid);
                 fetch('https://dreamchain-hod0.onrender.com/api/payments/complete', {
                     method:  'POST',
