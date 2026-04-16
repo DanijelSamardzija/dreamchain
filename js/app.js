@@ -384,7 +384,11 @@ const translations = {
         genRetry:           "Pokušaj ponovo",
         genStatusLoading:   "⏳ U obradi...",
         genStatusDone:      "✦ AI generisano",
-        genStatusError:     "⚠ Greška"
+        genStatusError:     "⚠ Greška",
+        notifGenerating:    "San dodan! Generišem AI sliku...",
+        notifImageDone:     "AI slika je gotova! ✦",
+        notifImageFail:     "AI slika nije uspjela — san je sačuvan.",
+        notifPayFail:       "Plaćanje nije uspjelo. Pokušaj ponovo."
     },
     en: {
         sub:           "Turn your dreams into AI art",
@@ -430,7 +434,11 @@ const translations = {
         genRetry:           "Try again",
         genStatusLoading:   "⏳ Processing...",
         genStatusDone:      "✦ AI generated",
-        genStatusError:     "⚠ Error"
+        genStatusError:     "⚠ Error",
+        notifGenerating:    "Dream added! Generating AI image...",
+        notifImageDone:     "AI image is ready! ✦",
+        notifImageFail:     "AI image failed — dream saved with gradient.",
+        notifPayFail:       "Payment failed. Please try again."
     },
     de: {
         sub:           "Verwandle deine Träume in AI-Kunst",
@@ -476,7 +484,11 @@ const translations = {
         genRetry:           "Erneut versuchen",
         genStatusLoading:   "⏳ Wird verarbeitet...",
         genStatusDone:      "✦ KI-generiert",
-        genStatusError:     "⚠ Fehler"
+        genStatusError:     "⚠ Fehler",
+        notifGenerating:    "Traum hinzugefügt! KI-Bild wird generiert...",
+        notifImageDone:     "KI-Bild ist fertig! ✦",
+        notifImageFail:     "KI-Bild fehlgeschlagen — Traum mit Gradient gespeichert.",
+        notifPayFail:       "Zahlung fehlgeschlagen. Bitte erneut versuchen."
     },
     es: {
         sub:           "Convierte tus sueños en arte IA",
@@ -522,7 +534,11 @@ const translations = {
         genRetry:           "Reintentar",
         genStatusLoading:   "⏳ Procesando...",
         genStatusDone:      "✦ Generado por IA",
-        genStatusError:     "⚠ Error"
+        genStatusError:     "⚠ Error",
+        notifGenerating:    "¡Sueño añadido! Generando imagen IA...",
+        notifImageDone:     "¡Imagen IA lista! ✦",
+        notifImageFail:     "Imagen IA fallida — sueño guardado con gradiente.",
+        notifPayFail:       "Pago fallido. Inténtalo de nuevo."
     },
     it: {
         sub:           "Trasforma i tuoi sogni in arte AI",
@@ -568,7 +584,11 @@ const translations = {
         genRetry:           "Riprova",
         genStatusLoading:   "⏳ In elaborazione...",
         genStatusDone:      "✦ Generato dall'IA",
-        genStatusError:     "⚠ Errore"
+        genStatusError:     "⚠ Errore",
+        notifGenerating:    "Sogno aggiunto! Generazione immagine IA...",
+        notifImageDone:     "Immagine IA pronta! ✦",
+        notifImageFail:     "Immagine IA fallita — sogno salvato con gradiente.",
+        notifPayFail:       "Pagamento fallito. Riprova."
     },
     ru: {
         sub:           "Превратите свои мечты в ИИ-искусство",
@@ -614,7 +634,11 @@ const translations = {
         genRetry:           "Попробовать снова",
         genStatusLoading:   "⏳ Обработка...",
         genStatusDone:      "✦ Создано ИИ",
-        genStatusError:     "⚠ Ошибка"
+        genStatusError:     "⚠ Ошибка",
+        notifGenerating:    "Сон добавлен! Генерирую изображение ИИ...",
+        notifImageDone:     "Изображение ИИ готово! ✦",
+        notifImageFail:     "Ошибка генерации — сон сохранён с градиентом.",
+        notifPayFail:       "Платёж не удался. Попробуйте снова."
     },
     zh: {
         sub:           "将你的梦想转化为人工智能艺术",
@@ -660,7 +684,11 @@ const translations = {
         genRetry:           "重试",
         genStatusLoading:   "⏳ 处理中...",
         genStatusDone:      "✦ AI 已生成",
-        genStatusError:     "⚠ 错误"
+        genStatusError:     "⚠ 错误",
+        notifGenerating:    "梦境已添加！正在生成AI图像...",
+        notifImageDone:     "AI图像已就绪！✦",
+        notifImageFail:     "AI图像生成失败 — 梦境已用渐变色保存。",
+        notifPayFail:       "支付失败，请重试。"
     },
     fr: {
         sub:           "Transformez vos rêves en art IA",
@@ -700,7 +728,17 @@ const translations = {
         sortNewest:         "Plus récents",
         sortPopular:        "Plus populaires",
         searchPh:           "Rechercher des rêves...",
-        noSearchResults:    "Aucun résultat pour cette recherche."
+        noSearchResults:    "Aucun résultat pour cette recherche.",
+        genLoading:         "Génération de l'image IA...",
+        genError:           "Échec de la génération",
+        genRetry:           "Réessayer",
+        genStatusLoading:   "⏳ En cours...",
+        genStatusDone:      "✦ Généré par IA",
+        genStatusError:     "⚠ Erreur",
+        notifGenerating:    "Rêve ajouté ! Génération de l'image IA...",
+        notifImageDone:     "Image IA prête ! ✦",
+        notifImageFail:     "Échec de l'image IA — rêve sauvegardé avec dégradé.",
+        notifPayFail:       "Paiement échoué. Veuillez réessayer."
     }
 };
 
@@ -823,7 +861,7 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
             onCancel: () => { resetButton(); },
             onError:  (error) => {
                 console.error('[Pi] Payment error:', error);
-                showNotification('Plaćanje nije uspjelo. Pokušaj ponovo.', 'error');
+                showNotification((translations[currentLang] || translations['sr']).notifPayFail || 'Plaćanje nije uspjelo.', 'error');
                 resetButton();
             }
         });
@@ -890,7 +928,8 @@ async function processDream(text) {
     textarea.value   = '';
     pendingDreamText = '';
     resetButton();
-    showNotification('San je dodan! Generišem AI sliku...', 'info');
+    const t2 = translations[currentLang] || translations['sr'];
+    showNotification(t2.notifGenerating || 'Generišem AI sliku...', 'info');
 
     // Generate AI image in background
     try {
@@ -913,7 +952,7 @@ async function processDream(text) {
 
         if (imageUrl) {
             newDream.imageUrl = imageUrl;
-            showNotification('AI slika je gotova!', 'success');
+            showNotification((translations[currentLang] || translations['sr']).notifImageDone || 'AI slika je gotova!', 'success');
             const dreams = loadDreams() || [];
             const idx = dreams.findIndex(d => String(d.id) === String(newDream.id));
             if (idx !== -1) { dreams[idx].imageUrl = imageUrl; saveDreams(dreams); }
@@ -925,7 +964,7 @@ async function processDream(text) {
         }
     } catch (err) {
         console.warn('[AI] Image generation failed:', err.message);
-        showNotification('AI slika nije uspjela — san je sačuvan s gradientom.', 'error');
+        showNotification((translations[currentLang] || translations['sr']).notifImageFail || 'AI slika nije uspjela.', 'error');
     }
 }
 
