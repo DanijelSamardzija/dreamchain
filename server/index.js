@@ -83,52 +83,14 @@ app.post('/api/generate-image', async (req, res) => {
     if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
 
     try {
-        const startRes = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions', {
-            method:  'POST',
-            headers: {
-                'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
-                'Content-Type':  'application/json'
-            },
-            body: JSON.stringify({
-                input: {
-                    prompt:        `dream visualization, surreal dreamlike art: ${prompt}`,
-                    num_outputs:   1,
-                    aspect_ratio:  '1:1',
-                    output_format: 'webp',
-                    output_quality: 80
-                }
-            })
-        });
+        const encoded  = encodeURIComponent(`surreal dreamlike art: ${prompt}`);
+        const seed     = Math.floor(Math.random() * 1000000);
+        const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`;
 
-        let prediction = await startRes.json();
-        console.log('[Replicate] API response:', JSON.stringify(prediction).substring(0, 300));
-        if (!prediction.id) {
-            console.error('[Replicate] No prediction ID — full response:', JSON.stringify(prediction));
-            return res.status(500).json({ error: prediction.detail || prediction.error || 'No prediction ID' });
-        }
-        console.log('[Replicate] Started prediction:', prediction.id);
-
-        // Poll until done (max 60s)
-        let attempts = 0;
-        while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && attempts < 60) {
-            await new Promise(r => setTimeout(r, 1000));
-            const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
-                headers: { 'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}` }
-            });
-            prediction = await pollRes.json();
-            attempts++;
-        }
-
-        if (prediction.status !== 'succeeded') {
-            console.error('[Replicate] Failed:', prediction.error);
-            return res.status(500).json({ error: prediction.error || 'Generation failed' });
-        }
-
-        const imageUrl = prediction.output[0];
-        console.log('[Replicate] Image ready:', imageUrl);
+        console.log('[Pollinations] Image URL generated:', imageUrl.substring(0, 80));
         res.json({ imageUrl });
     } catch (err) {
-        console.error('[Replicate] Error:', err);
+        console.error('[Pollinations] Error:', err);
         res.status(500).json({ error: err.message });
     }
 });
