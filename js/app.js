@@ -865,23 +865,22 @@ function simulateProcessing(text) {
     }, 1500);
 }
 
-function processDream(text) {
+async function processDream(text) {
     const textarea = document.getElementById('dreamText');
     const label    = text.length > 22 ? text.substring(0, 22).trimEnd() + '…' : text;
+    const fallback = gradientPalette[Math.floor(Math.random() * gradientPalette.length)];
 
     const newDream = {
         id:         Date.now(),
         label,
         quote:      `"${text}"`,
-        gradient:   gradientPalette[Math.floor(Math.random() * gradientPalette.length)],
+        gradient:   fallback,
+        imageUrl:   null,
         authorUid:  currentUser ? currentUser.uid      : null,
         authorName: currentUser ? currentUser.username : null
     };
 
-    // If "Mine" filter is active, show the new card immediately regardless
-    // (it belongs to the current user by definition)
     prependCard(newDream);
-
     const stored = loadDreams() || defaultDreams;
     saveDreams([newDream, ...stored]);
 
@@ -892,6 +891,37 @@ function processDream(text) {
 
     textarea.value   = '';
     pendingDreamText = '';
+    resetButton();
+
+    // Generate AI image in background
+    try {
+        const res  = await fetch('https://dreamchain-hod0.onrender.com/api/generate-image', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ prompt: text })
+        });
+        const data = await res.json();
+        if (data.imageUrl) {
+            newDream.imageUrl = data.imageUrl;
+            // Update card in DOM
+            const card = document.querySelector(`[data-id="${newDream.id}"]`);
+            if (card) {
+                const preview = card.querySelector('.card-preview') || card;
+                preview.style.background = `url('${data.imageUrl}') center/cover no-repeat`;
+            }
+            // Update localStorage
+            const dreams = loadDreams() || [];
+            const idx = dreams.findIndex(d => d.id === newDream.id);
+            if (idx !== -1) { dreams[idx].imageUrl = data.imageUrl; saveDreams(dreams); }
+            // Update Supabase
+            if (db) {
+                db.from('dreams').update({ imageUrl: data.imageUrl }).eq('id', newDream.id)
+                    .then(({ error }) => { if (error) console.warn('[Supabase] update imageUrl failed:', error); });
+            }
+        }
+    } catch (err) {
+        console.warn('[AI] Image generation failed, keeping gradient:', err.message);
+    }
 }
 
 function resetButton() {

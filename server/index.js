@@ -77,6 +77,57 @@ app.post('/api/payments/complete', async (req, res) => {
     }
 });
 
+// ── POST /api/generate-image ──────────────────────────────────
+app.post('/api/generate-image', async (req, res) => {
+    const { prompt } = req.body;
+    if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
+
+    try {
+        const startRes = await fetch('https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions', {
+            method:  'POST',
+            headers: {
+                'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}`,
+                'Content-Type':  'application/json'
+            },
+            body: JSON.stringify({
+                input: {
+                    prompt:        `dream visualization, surreal dreamlike art: ${prompt}`,
+                    num_outputs:   1,
+                    aspect_ratio:  '1:1',
+                    output_format: 'webp',
+                    output_quality: 80
+                }
+            })
+        });
+
+        let prediction = await startRes.json();
+        console.log('[Replicate] Started prediction:', prediction.id);
+
+        // Poll until done (max 60s)
+        let attempts = 0;
+        while (prediction.status !== 'succeeded' && prediction.status !== 'failed' && attempts < 60) {
+            await new Promise(r => setTimeout(r, 1000));
+            const pollRes = await fetch(`https://api.replicate.com/v1/predictions/${prediction.id}`, {
+                headers: { 'Authorization': `Bearer ${process.env.REPLICATE_API_TOKEN}` }
+            });
+            prediction = await pollRes.json();
+            attempts++;
+        }
+
+        if (prediction.status !== 'succeeded') {
+            console.error('[Replicate] Failed:', prediction.error);
+            return res.status(500).json({ error: prediction.error || 'Generation failed' });
+        }
+
+        const imageUrl = prediction.output[0];
+        console.log('[Replicate] Image ready:', imageUrl);
+        res.json({ imageUrl });
+    } catch (err) {
+        console.error('[Replicate] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // ── Health check ──────────────────────────────────────────────
 app.get('/health', (req, res) => {
     res.json({ status: 'ok', service: 'dreamchain-server' });
