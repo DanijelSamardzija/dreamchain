@@ -6,10 +6,11 @@
 Pi.init({ version: "2.0", sandbox: true });
 
 // ── Constants ────────────────────────────────────────────────
-const STORAGE_KEY  = 'dreamchain_dreams';
-const USER_KEY     = 'dreamchain_user';
-const SORT_KEY     = 'dreamchain_sort';
-const SEARCH_KEY   = 'dreamchain_search';
+const STORAGE_KEY   = 'dreamchain_dreams';
+const USER_KEY      = 'dreamchain_user';
+const SORT_KEY      = 'dreamchain_sort';
+const SEARCH_KEY    = 'dreamchain_search';
+const COMMENTS_KEY  = 'dreamchain_comments';
 
 // ── Mock Pi usernames (used during simulated login) ──────────
 const MOCK_USERNAMES = [
@@ -59,6 +60,7 @@ let activeFilter     = 'all';       // 'all' | 'mine'
 let activeSort       = 'newest';    // 'newest' | 'popular'
 let activeSearch     = '';          // current search query
 let activeStyle      = 'dreamlike'; // AI image style
+let activeFormat     = 'square';    // AI image format: 'square' | 'portrait' | 'landscape'
 
 // ── localStorage — dreams ────────────────────────────────────
 function loadDreams() {
@@ -108,6 +110,38 @@ function loadSearch() {
 
 function saveSearch(q) {
     try { localStorage.setItem(SEARCH_KEY, q); } catch {}
+}
+
+// ── localStorage — comments ───────────────────────────────────
+function loadComments() {
+    try {
+        const raw = localStorage.getItem(COMMENTS_KEY);
+        return raw ? JSON.parse(raw) : {};
+    } catch { return {}; }
+}
+
+function saveComments(all) {
+    try { localStorage.setItem(COMMENTS_KEY, JSON.stringify(all)); } catch {}
+}
+
+function getCommentsForDream(dreamId) {
+    const all = loadComments();
+    return all[String(dreamId)] || [];
+}
+
+function addCommentToStorage(dreamId, comment) {
+    const all = loadComments();
+    const key = String(dreamId);
+    if (!all[key]) all[key] = [];
+    all[key].unshift(comment); // newest first
+    if (all[key].length > 50) all[key] = all[key].slice(0, 50);
+    saveComments(all);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.appendChild(document.createTextNode(text));
+    return div.innerHTML;
 }
 
 // ── Auth — render login bar ───────────────────────────────────
@@ -199,6 +233,7 @@ function createCardEl(dream, extraClass = '') {
     const heart    = liked ? '♥' : '♡';
     const likedCls = liked ? ' liked' : '';
     const ariaLbl  = liked ? t.unlikeLabel : t.likeLabel;
+    const views    = dream.views || 0;
 
     const authorBadge = dream.authorName
         ? `<div class="card-author">${dream.authorName}</div>`
@@ -220,6 +255,7 @@ function createCardEl(dream, extraClass = '') {
                 <span class="like-heart">${heart}</span>
                 <span class="like-count">${count}</span>
             </button>
+            <span class="view-count">👁 ${views}</span>
         </div>
     `;
     return card;
@@ -306,6 +342,73 @@ document.querySelectorAll('.style-btn').forEach(btn => {
         btn.classList.add('active');
         activeStyle = btn.dataset.style;
     });
+});
+
+// ── Image format selector ─────────────────────────────────────
+document.querySelectorAll('.format-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.format-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activeFormat = btn.dataset.format;
+    });
+});
+
+// ── Improve dream text ────────────────────────────────────────
+document.getElementById('improveBtn').addEventListener('click', async () => {
+    const textarea = document.getElementById('dreamText');
+    const text     = textarea.value.trim();
+    if (!text) {
+        textarea.classList.add('shake');
+        textarea.addEventListener('animationend', () => textarea.classList.remove('shake'), { once: true });
+        return;
+    }
+    const t   = translations[currentLang] || translations['sr'];
+    const btn = document.getElementById('improveBtn');
+    btn.disabled    = true;
+    btn.textContent = '✦ ✦ ✦';
+    try {
+        const res = await fetch('https://dreamchain-hod0.onrender.com/api/improve-dream', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ text })
+        });
+        if (!res.ok) throw new Error('Server error');
+        const data = await res.json();
+        if (data.improved) {
+            textarea.value = data.improved.substring(0, 500);
+            const charEl = document.getElementById('dreamCharCount');
+            if (charEl) charEl.textContent = textarea.value.length;
+            showNotification(t.notifImproved || 'San poboljšan! ✨', 'success');
+        }
+    } catch (err) {
+        showNotification(t.notifImproveFail || 'Poboljšanje nije uspelo.', 'error');
+    } finally {
+        btn.disabled    = false;
+        btn.textContent = t.improveBtn || '✨ Poboljšaj';
+    }
+});
+
+// ── Comment send ──────────────────────────────────────────────
+function sendComment() {
+    if (!currentUser) { openLoginRequired(); return; }
+    if (!activeDreamId) return;
+    const input = document.getElementById('commentInput');
+    const text  = input.value.trim();
+    if (!text) return;
+    const comment = {
+        uid:       currentUser.uid,
+        username:  currentUser.username,
+        text:      text.substring(0, 200),
+        createdAt: Date.now()
+    };
+    addCommentToStorage(activeDreamId, comment);
+    input.value = '';
+    renderComments(activeDreamId);
+}
+
+document.getElementById('commentSendBtn').addEventListener('click', sendComment);
+document.getElementById('commentInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') sendComment();
 });
 
 // ── Sort button state ─────────────────────────────────────────
@@ -409,7 +512,14 @@ const translations = {
         notifImageFail:     "AI slika nije uspjela — san je sačuvan.",
         notifPayFail:       "Plaćanje nije uspjelo. Pokušaj ponovo.",
         shareBtn:           "↗ Podeli",
-        shareCopied:        "Link kopiran! 🔗"
+        shareCopied:        "Link kopiran! 🔗",
+        improveBtn:         "✨ Poboljšaj",
+        notifImproved:      "San poboljšan! ✨",
+        notifImproveFail:   "Poboljšanje nije uspelo.",
+        commentsTitle:      "Komentari",
+        addCommentPh:       "Dodaj komentar...",
+        noComments:         "Nema komentara još.",
+        loginToComment:     "Prijavite se da biste komentarisali."
     },
     en: {
         sub:           "Turn your dreams into AI art",
@@ -461,7 +571,14 @@ const translations = {
         notifImageFail:     "AI image failed — dream saved with gradient.",
         notifPayFail:       "Payment failed. Please try again.",
         shareBtn:           "↗ Share",
-        shareCopied:        "Link copied! 🔗"
+        shareCopied:        "Link copied! 🔗",
+        improveBtn:         "✨ Improve",
+        notifImproved:      "Dream improved! ✨",
+        notifImproveFail:   "Could not improve dream.",
+        commentsTitle:      "Comments",
+        addCommentPh:       "Add a comment...",
+        noComments:         "No comments yet.",
+        loginToComment:     "Log in to comment."
     },
     de: {
         sub:           "Verwandle deine Träume in AI-Kunst",
@@ -513,7 +630,14 @@ const translations = {
         notifImageFail:     "KI-Bild fehlgeschlagen — Traum mit Gradient gespeichert.",
         notifPayFail:       "Zahlung fehlgeschlagen. Bitte erneut versuchen.",
         shareBtn:           "↗ Teilen",
-        shareCopied:        "Link kopiert! 🔗"
+        shareCopied:        "Link kopiert! 🔗",
+        improveBtn:         "✨ Verbessern",
+        notifImproved:      "Traum verbessert! ✨",
+        notifImproveFail:   "Verbesserung fehlgeschlagen.",
+        commentsTitle:      "Kommentare",
+        addCommentPh:       "Kommentar hinzufügen...",
+        noComments:         "Noch keine Kommentare.",
+        loginToComment:     "Melde dich an, um zu kommentieren."
     },
     es: {
         sub:           "Convierte tus sueños en arte IA",
@@ -565,7 +689,14 @@ const translations = {
         notifImageFail:     "Imagen IA fallida — sueño guardado con gradiente.",
         notifPayFail:       "Pago fallido. Inténtalo de nuevo.",
         shareBtn:           "↗ Compartir",
-        shareCopied:        "¡Enlace copiado! 🔗"
+        shareCopied:        "¡Enlace copiado! 🔗",
+        improveBtn:         "✨ Mejorar",
+        notifImproved:      "¡Sueño mejorado! ✨",
+        notifImproveFail:   "No se pudo mejorar el sueño.",
+        commentsTitle:      "Comentarios",
+        addCommentPh:       "Añadir comentario...",
+        noComments:         "Aún no hay comentarios.",
+        loginToComment:     "Inicia sesión para comentar."
     },
     it: {
         sub:           "Trasforma i tuoi sogni in arte AI",
@@ -617,7 +748,14 @@ const translations = {
         notifImageFail:     "Immagine IA fallita — sogno salvato con gradiente.",
         notifPayFail:       "Pagamento fallito. Riprova.",
         shareBtn:           "↗ Condividi",
-        shareCopied:        "Link copiato! 🔗"
+        shareCopied:        "Link copiato! 🔗",
+        improveBtn:         "✨ Migliora",
+        notifImproved:      "Sogno migliorato! ✨",
+        notifImproveFail:   "Impossibile migliorare il sogno.",
+        commentsTitle:      "Commenti",
+        addCommentPh:       "Aggiungi un commento...",
+        noComments:         "Ancora nessun commento.",
+        loginToComment:     "Accedi per commentare."
     },
     ru: {
         sub:           "Превратите свои мечты в ИИ-искусство",
@@ -669,7 +807,14 @@ const translations = {
         notifImageFail:     "Ошибка генерации — сон сохранён с градиентом.",
         notifPayFail:       "Платёж не удался. Попробуйте снова.",
         shareBtn:           "↗ Поделиться",
-        shareCopied:        "Ссылка скопирована! 🔗"
+        shareCopied:        "Ссылка скопирована! 🔗",
+        improveBtn:         "✨ Улучшить",
+        notifImproved:      "Сон улучшен! ✨",
+        notifImproveFail:   "Не удалось улучшить сон.",
+        commentsTitle:      "Комментарии",
+        addCommentPh:       "Добавить комментарий...",
+        noComments:         "Комментариев пока нет.",
+        loginToComment:     "Войдите, чтобы комментировать."
     },
     zh: {
         sub:           "将你的梦想转化为人工智能艺术",
@@ -721,7 +866,14 @@ const translations = {
         notifImageFail:     "AI图像生成失败 — 梦境已用渐变色保存。",
         notifPayFail:       "支付失败，请重试。",
         shareBtn:           "↗ 分享",
-        shareCopied:        "链接已复制！🔗"
+        shareCopied:        "链接已复制！🔗",
+        improveBtn:         "✨ 改善",
+        notifImproved:      "梦境已改善！✨",
+        notifImproveFail:   "无法改善梦境。",
+        commentsTitle:      "评论",
+        addCommentPh:       "添加评论...",
+        noComments:         "暂无评论。",
+        loginToComment:     "登录后发表评论。"
     },
     fr: {
         sub:           "Transformez vos rêves en art IA",
@@ -773,7 +925,14 @@ const translations = {
         notifImageFail:     "Échec de l'image IA — rêve sauvegardé avec dégradé.",
         notifPayFail:       "Paiement échoué. Veuillez réessayer.",
         shareBtn:           "↗ Partager",
-        shareCopied:        "Lien copié ! 🔗"
+        shareCopied:        "Lien copié ! 🔗",
+        improveBtn:         "✨ Améliorer",
+        notifImproved:      "Rêve amélioré ! ✨",
+        notifImproveFail:   "Impossible d'améliorer le rêve.",
+        commentsTitle:      "Commentaires",
+        addCommentPh:       "Ajouter un commentaire...",
+        noComments:         "Pas encore de commentaires.",
+        loginToComment:     "Connectez-vous pour commenter."
     }
 };
 
@@ -831,6 +990,14 @@ function applyLanguage(lang) {
     document.getElementById('dreamDeleteBtn').innerText = data.deleteBtn;
     document.getElementById('dreamEditBtn').innerText   = data.editBtn;
     document.getElementById('dreamShareBtn').innerText  = data.shareBtn || '↗ Share';
+
+    // Comments section
+    document.getElementById('commentsTitle').innerText   = data.commentsTitle   || 'Comments';
+    document.getElementById('commentInput').placeholder  = data.addCommentPh    || 'Add a comment...';
+
+    // Improve button (only update if not in loading state)
+    const impBtn = document.getElementById('improveBtn');
+    if (impBtn && !impBtn.disabled) impBtn.textContent = data.improveBtn || '✨ Improve';
 
     // Re-render auth bar so button labels update in place
     renderAuthUI();
@@ -948,6 +1115,7 @@ async function processDream(text, style = 'dreamlike') {
         quote:      `"${text}"`,
         gradient:   fallback,
         imageUrl:   null,
+        views:      0,
         authorUid:  currentUser ? currentUser.uid      : null,
         authorName: currentUser ? currentUser.username : null
     };
@@ -971,10 +1139,12 @@ async function processDream(text, style = 'dreamlike') {
 
     // Generate AI image in background
     try {
+        const formatDims = { square: [512,512], portrait: [512,768], landscape: [768,512] };
+        const [imgW, imgH] = formatDims[activeFormat] || [512,512];
         const res = await fetch('https://dreamchain-hod0.onrender.com/api/generate-image', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ prompt: text, style })
+            body:    JSON.stringify({ prompt: text, style, width: imgW, height: imgH })
         });
         if (!res.ok) throw new Error('Server error ' + res.status);
 
@@ -1030,6 +1200,56 @@ function resetButton() {
     btn.disabled = false;
     btn.classList.remove('loading');
     applyLanguage(currentLang);
+}
+
+// ── Increment view count when dream is opened ─────────────────
+function incrementViews(dreamId) {
+    if (!dreamId) return;
+    const all = loadDreams() || defaultDreams;
+    const idx = all.findIndex(d => String(d.id) === String(dreamId));
+    if (idx === -1 || String(all[idx].id).startsWith('seed-')) return;
+    all[idx].views = (all[idx].views || 0) + 1;
+    saveDreams(all);
+    // Update DOM card
+    const card = document.querySelector(`.dream-card[data-id="${dreamId}"]`);
+    if (card) {
+        const viewEl = card.querySelector('.view-count');
+        if (viewEl) viewEl.textContent = `👁 ${all[idx].views}`;
+    }
+}
+
+// ── Render comments for a dream ───────────────────────────────
+function renderComments(dreamId) {
+    const t        = translations[currentLang] || translations['sr'];
+    const list     = document.getElementById('commentsList');
+    const addArea  = document.getElementById('commentAdd');
+    const loginMsg = document.getElementById('commentLoginMsg');
+    if (!list) return;
+
+    const comments = dreamId ? getCommentsForDream(dreamId) : [];
+
+    if (comments.length === 0) {
+        list.innerHTML = `<div class="comment-empty">${t.noComments || 'Nema komentara još.'}</div>`;
+    } else {
+        list.innerHTML = comments.map(c => `
+            <div class="comment-item">
+                <div class="comment-author">${escapeHtml(c.username || 'Anonymous')}</div>
+                <div class="comment-text">${escapeHtml(c.text)}</div>
+            </div>
+        `).join('');
+    }
+
+    // Show add-comment input only for logged-in users
+    if (addArea && loginMsg) {
+        if (currentUser) {
+            addArea.style.display  = 'flex';
+            loginMsg.style.display = 'none';
+        } else {
+            addArea.style.display  = 'none';
+            loginMsg.style.display = 'block';
+            loginMsg.textContent   = t.loginToComment || 'Prijavite se da biste komentarisali.';
+        }
+    }
 }
 
 // ── Dream Detail Modal ────────────────────────────────────────
@@ -1097,6 +1317,14 @@ function openDreamModal(label, quote, gradient, authorName, dreamId) {
     } else {
         document.getElementById('dreamModalLikeBtn').style.display = 'none';
     }
+
+    // Show view count in meta line
+    const viewsNow = dreamForLike ? (dreamForLike.views || 0) : 0;
+    document.getElementById('dreamModalMeta').innerText = `${t.dreamMeta}  ·  👁 ${viewsNow}`;
+
+    // Increment views + render comments
+    incrementViews(dreamId);
+    renderComments(dreamId);
 
     openOverlay(dreamModal);
 }

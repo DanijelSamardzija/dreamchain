@@ -48,6 +48,14 @@
             <button class="style-btn" data-style="cyberpunk">🤖 Cyberpunk</button>
             <button class="style-btn" data-style="watercolor">🎨 Watercolor</button>
         </div>
+        <div class="input-tools">
+            <div class="format-selector" id="formatSelector">
+                <button class="format-btn active" data-format="square">□ Square</button>
+                <button class="format-btn" data-format="portrait">▯ Portrait</button>
+                <button class="format-btn" data-format="landscape">▭ Landscape</button>
+            </div>
+            <button class="btn-improve" id="improveBtn">✨ Poboljšaj</button>
+        </div>
         <p class="input-char-count"><span id="dreamCharCount">0</span> / 500</p>
         <button class="btn-generate" id="genBtn">Vizualizuj san (Pi 0.5)</button>
     </div>
@@ -120,6 +128,15 @@
                     <button class="btn-edit-dream"   id="dreamEditBtn">Izmeni san</button>
                     <button class="btn-delete-dream" id="dreamDeleteBtn">Obriši san</button>
                 </div>
+                <div class="dream-comments" id="dreamComments">
+                    <h3 class="comments-title" id="commentsTitle">Komentari</h3>
+                    <div class="comments-list" id="commentsList"></div>
+                    <div class="comment-add" id="commentAdd">
+                        <input type="text" id="commentInput" class="comment-input" placeholder="Dodaj komentar..." maxlength="200">
+                        <button class="btn-comment-send" id="commentSendBtn">→</button>
+                    </div>
+                    <p class="comment-login-msg" id="commentLoginMsg"></p>
+                </div>
             </div>
         </div>
     </div>
@@ -165,6 +182,16 @@
 
     <!-- App logic -->
     <script src="js/app.js"></script>
+
+    <!-- Service Worker registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .catch(err => console.warn('[SW] Registration failed:', err));
+            });
+        }
+    </script>
 
     <!-- Footer -->
     <footer style="text-align:center; padding: 24px 16px 32px; color: #4a4a6a; font-size: 0.8rem;">

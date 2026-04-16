@@ -79,7 +79,7 @@ app.post('/api/payments/complete', async (req, res) => {
 
 // ── POST /api/generate-image ──────────────────────────────────
 app.post('/api/generate-image', async (req, res) => {
-    const { prompt, style } = req.body;
+    const { prompt, style, width = 512, height = 512 } = req.body;
     if (!prompt) return res.status(400).json({ error: 'Missing prompt' });
 
     const stylePrompts = {
@@ -92,10 +92,14 @@ app.post('/api/generate-image', async (req, res) => {
     };
     const stylePrefix = stylePrompts[style] || stylePrompts.dreamlike;
 
+    // Validate dimensions (only allow 512 or 768)
+    const w = [512, 768].includes(Number(width))  ? Number(width)  : 512;
+    const h = [512, 768].includes(Number(height)) ? Number(height) : 512;
+
     try {
         const encoded  = encodeURIComponent(`${stylePrefix}: ${prompt}`);
         const seed     = Math.floor(Math.random() * 1000000);
-        const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`;
+        const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=${w}&height=${h}&seed=${seed}&nologo=true`;
 
         console.log('[Pollinations] Fetching image...');
         let imgRes;
@@ -119,6 +123,30 @@ app.post('/api/generate-image', async (req, res) => {
         res.send(buffer);
     } catch (err) {
         console.error('[Pollinations] Error:', err);
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// ── POST /api/improve-dream ───────────────────────────────────
+app.post('/api/improve-dream', async (req, res) => {
+    const { text } = req.body;
+    if (!text || text.trim().length < 3) return res.status(400).json({ error: 'Text too short' });
+
+    try {
+        const prompt = `You are a creative writer. Rewrite this dream description to be more vivid, poetic and detailed for AI art generation. Keep it under 80 words. Return ONLY the rewritten text, no quotes or explanations:\n\n${text.trim()}`;
+        const encoded = encodeURIComponent(prompt);
+        const textRes = await fetch(`https://text.pollinations.ai/${encoded}`, {
+            headers: { 'User-Agent': 'DreamChain/1.0' }
+        });
+        if (!textRes.ok) throw new Error('Text API error: ' + textRes.status);
+
+        const improved = (await textRes.text()).trim();
+        if (!improved || improved.length < 5) throw new Error('Empty response from text API');
+
+        console.log('[Improve] Text improved successfully');
+        res.json({ improved: improved.substring(0, 500) });
+    } catch (err) {
+        console.error('[Improve] Error:', err.message);
         res.status(500).json({ error: err.message });
     }
 });
