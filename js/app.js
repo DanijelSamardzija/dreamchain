@@ -799,45 +799,31 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
         btn.classList.add('loading');
         btn.textContent = '✦ ✦ ✦';
 
-        fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
-
         Pi.createPayment({
             amount:   0.5,
             memo:     'Dream-Chain AI visualization',
             metadata: { dream: pendingDreamText }
         }, {
             onReadyForServerApproval: (paymentId) => {
-                fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
-                console.log('[Pi] onReadyForServerApproval:', paymentId);
                 fetch('https://dreamchain-hod0.onrender.com/api/payments/approve', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({ paymentId })
-                })
-                .then(r => r.json())
-                .then(d => console.log('[Pi] approve response:', JSON.stringify(d)))
-                .catch(err => console.error('[Pi] approval FETCH ERROR:', err.message));
+                }).catch(err => console.error('[Pi] approval error:', err.message));
             },
             onReadyForServerCompletion: (paymentId, txid) => {
-                fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
-                console.log('[Pi] onReadyForServerCompletion:', paymentId, txid);
                 fetch('https://dreamchain-hod0.onrender.com/api/payments/complete', {
                     method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body:    JSON.stringify({ paymentId, txid })
                 })
-                .then(r => r.json())
-                .then(d => { console.log('[Pi] complete response:', JSON.stringify(d)); processDream(pendingDreamText); })
-                .catch(err => { console.error('[Pi] completion FETCH ERROR:', err.message); resetButton(); });
+                .then(() => processDream(pendingDreamText))
+                .catch(err => { console.error('[Pi] completion error:', err.message); resetButton(); });
             },
-            onCancel: (paymentId) => {
-                console.log('[Pi] Payment cancelled:', paymentId);
-                resetButton();
-            },
-            onError: (error, payment) => {
-                console.error('[Pi] Payment error:', error, payment);
-                const msg = typeof error === 'string' ? error : (error && error.message) ? error.message : JSON.stringify(error);
-                alert('Pi payment error: ' + msg);
+            onCancel: () => { resetButton(); },
+            onError:  (error) => {
+                console.error('[Pi] Payment error:', error);
+                showNotification('Plaćanje nije uspjelo. Pokušaj ponovo.', 'error');
                 resetButton();
             }
         });
@@ -904,6 +890,7 @@ async function processDream(text) {
     textarea.value   = '';
     pendingDreamText = '';
     resetButton();
+    showNotification('San je dodan! Generišem AI sliku...', 'info');
 
     // Generate AI image in background
     try {
@@ -926,6 +913,7 @@ async function processDream(text) {
 
         if (imageUrl) {
             newDream.imageUrl = imageUrl;
+            showNotification('AI slika je gotova!', 'success');
             const dreams = loadDreams() || [];
             const idx = dreams.findIndex(d => String(d.id) === String(newDream.id));
             if (idx !== -1) { dreams[idx].imageUrl = imageUrl; saveDreams(dreams); }
@@ -936,8 +924,28 @@ async function processDream(text) {
             }
         }
     } catch (err) {
-        console.warn('[AI] Image generation failed, keeping gradient:', err.message);
+        console.warn('[AI] Image generation failed:', err.message);
+        showNotification('AI slika nije uspjela — san je sačuvan s gradientom.', 'error');
     }
+}
+
+function showNotification(message, type = 'info') {
+    const existing = document.getElementById('dreamchain-notif');
+    if (existing) existing.remove();
+
+    const notif = document.createElement('div');
+    notif.id = 'dreamchain-notif';
+    const colors = { info: '#7c3aed', success: '#059669', error: '#dc2626' };
+    notif.style.cssText = `
+        position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+        background: ${colors[type] || colors.info}; color: #fff;
+        padding: 12px 24px; border-radius: 24px; font-size: 0.9rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.4); z-index: 9999;
+        animation: fadeInUp 0.3s ease;
+    `;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    setTimeout(() => { if (notif.parentNode) notif.remove(); }, 4000);
 }
 
 function resetButton() {
