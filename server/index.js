@@ -88,10 +88,16 @@ app.post('/api/generate-image', async (req, res) => {
         const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`;
 
         console.log('[Pollinations] Fetching image...');
-        const imgRes = await fetch(imageUrl);
+        let imgRes;
+        for (let attempt = 1; attempt <= 4; attempt++) {
+            imgRes = await fetch(imageUrl);
+            if (imgRes.status !== 429) break;
+            console.log(`[Pollinations] Rate limited (429), retry ${attempt}/4 in 5s...`);
+            await new Promise(r => setTimeout(r, 5000));
+        }
         if (!imgRes.ok) {
             console.error('[Pollinations] Failed to fetch image:', imgRes.status);
-            return res.status(500).json({ error: 'Image fetch failed' });
+            return res.status(500).json({ error: 'Image fetch failed: ' + imgRes.status });
         }
 
         const buffer      = await imgRes.buffer();
