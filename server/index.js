@@ -87,8 +87,20 @@ app.post('/api/generate-image', async (req, res) => {
         const seed     = Math.floor(Math.random() * 1000000);
         const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=512&height=512&seed=${seed}&nologo=true`;
 
-        console.log('[Pollinations] Image URL generated:', imageUrl.substring(0, 80));
-        res.json({ imageUrl });
+        console.log('[Pollinations] Fetching image...');
+        const imgRes = await fetch(imageUrl);
+        if (!imgRes.ok) {
+            console.error('[Pollinations] Failed to fetch image:', imgRes.status);
+            return res.status(500).json({ error: 'Image fetch failed' });
+        }
+
+        const buffer      = await imgRes.buffer();
+        const contentType = imgRes.headers.get('content-type') || 'image/jpeg';
+        console.log('[Pollinations] Image ready, size:', buffer.length);
+
+        res.set('Content-Type', contentType);
+        res.set('Access-Control-Allow-Origin', '*');
+        res.send(buffer);
     } catch (err) {
         console.error('[Pollinations] Error:', err);
         res.status(500).json({ error: err.message });

@@ -907,23 +907,31 @@ async function processDream(text) {
 
     // Generate AI image in background
     try {
-        const res  = await fetch('https://dreamchain-hod0.onrender.com/api/generate-image', {
+        const res = await fetch('https://dreamchain-hod0.onrender.com/api/generate-image', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ prompt: text })
         });
-        const data = await res.json();
-        if (data.imageUrl) {
-            newDream.imageUrl = data.imageUrl;
-            // Update localStorage
+        if (!res.ok) throw new Error('Server error ' + res.status);
+
+        const contentType = res.headers.get('content-type') || '';
+        let imageUrl;
+        if (contentType.startsWith('image/')) {
+            const blob = await res.blob();
+            imageUrl = URL.createObjectURL(blob);
+        } else {
+            const data = await res.json();
+            imageUrl = data.imageUrl;
+        }
+
+        if (imageUrl) {
+            newDream.imageUrl = imageUrl;
             const dreams = loadDreams() || [];
             const idx = dreams.findIndex(d => String(d.id) === String(newDream.id));
-            if (idx !== -1) { dreams[idx].imageUrl = data.imageUrl; saveDreams(dreams); }
-            // Re-render gallery so card shows AI image
+            if (idx !== -1) { dreams[idx].imageUrl = imageUrl; saveDreams(dreams); }
             renderFilteredGallery();
-            // Update Supabase
             if (db) {
-                db.from('dreams').update({ imageUrl: data.imageUrl }).eq('id', newDream.id)
+                db.from('dreams').update({ imageUrl }).eq('id', newDream.id)
                     .then(({ error }) => { if (error) console.warn('[Supabase] update imageUrl failed:', error); });
             }
         }
