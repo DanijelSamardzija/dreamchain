@@ -893,8 +893,8 @@ async function processDream(text) {
     };
 
     prependCard(newDream);
-    const stored = loadDreams() || defaultDreams;
-    saveDreams([newDream, ...stored]);
+    const storedDreams = loadDreams() || defaultDreams;
+    saveDreams([newDream, ...storedDreams]);
 
     if (db) {
         db.from('dreams').insert(newDream)
