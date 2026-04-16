@@ -1219,6 +1219,9 @@ updateFilterButtons();
 updateSortButtons();
 renderFilteredGallery();
 
+// ── Wake up Render backend on page load ──────────────────────
+fetch('https://dreamchain-hod0.onrender.com/health').catch(() => {});
+
 // ── Supabase: load community dreams on start ──────────────────
 (async function syncFromSupabase() {
     if (!db) return;
