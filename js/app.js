@@ -915,17 +915,12 @@ async function processDream(text) {
         const data = await res.json();
         if (data.imageUrl) {
             newDream.imageUrl = data.imageUrl;
-            // Update card in DOM
-            // Update localStorage with imageUrl
+            // Update localStorage
             const dreams = loadDreams() || [];
             const idx = dreams.findIndex(d => String(d.id) === String(newDream.id));
             if (idx !== -1) { dreams[idx].imageUrl = data.imageUrl; saveDreams(dreams); }
-            // Re-render gallery so createCardEl uses the imageUrl
+            // Re-render gallery so card shows AI image
             renderFilteredGallery();
-            // Update localStorage
-            const dreams = loadDreams() || [];
-            const idx = dreams.findIndex(d => d.id === newDream.id);
-            if (idx !== -1) { dreams[idx].imageUrl = data.imageUrl; saveDreams(dreams); }
             // Update Supabase
             if (db) {
                 db.from('dreams').update({ imageUrl: data.imageUrl }).eq('id', newDream.id)
