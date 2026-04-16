@@ -911,8 +911,8 @@ async function processDream(text) {
             // Update card in DOM
             const card = document.querySelector(`[data-id="${newDream.id}"]`);
             if (card) {
-                const preview = card.querySelector('.card-preview') || card;
-                preview.style.background = `url('${data.imageUrl}') center/cover no-repeat`;
+                const imgEl = card.querySelector('.dream-img');
+                if (imgEl) imgEl.style.background = `url('${data.imageUrl}') center/cover no-repeat`;
             }
             // Update localStorage
             const dreams = loadDreams() || [];
