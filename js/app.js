@@ -912,7 +912,14 @@ async function processDream(text) {
             const card = document.querySelector(`[data-id="${newDream.id}"]`);
             if (card) {
                 const imgEl = card.querySelector('.dream-img');
-                if (imgEl) imgEl.style.background = `url('${data.imageUrl}') center/cover no-repeat`;
+                if (imgEl) {
+                    const img = new Image();
+                    img.onload = () => {
+                        imgEl.style.background = `url('${data.imageUrl}') center/cover no-repeat`;
+                        imgEl.style.color = 'white';
+                    };
+                    img.src = data.imageUrl;
+                }
             }
             // Update localStorage
             const dreams = loadDreams() || [];
