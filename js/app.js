@@ -3,7 +3,7 @@
 // ============================================================
 
 // ── Pi SDK Init ───────────────────────────────────────────────
-Pi.init({ version: "2.0", sandbox: false });
+Pi.init({ version: "2.0", sandbox: true });
 
 // ── Constants ────────────────────────────────────────────────
 const STORAGE_KEY  = 'dreamchain_dreams';
@@ -141,7 +141,7 @@ function handleLogin() {
     btn.disabled    = true;
     btn.textContent = '✦ ✦ ✦';
 
-    Pi.authenticate(['username'], onIncompletePaymentFound)
+    Pi.authenticate(['username', 'payments'], onIncompletePaymentFound)
         .then(auth => {
             currentUser = { uid: auth.user.uid, username: auth.user.username };
             saveUser(currentUser);
@@ -824,6 +824,8 @@ document.getElementById('modalConfirm').addEventListener('click', () => {
             },
             onError: (error, payment) => {
                 console.error('[Pi] Payment error:', error, payment);
+                const msg = typeof error === 'string' ? error : (error && error.message) ? error.message : JSON.stringify(error);
+                alert('Pi payment error: ' + msg);
                 resetButton();
             }
         });
